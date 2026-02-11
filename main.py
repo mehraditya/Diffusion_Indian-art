@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import torch
+if not hasattr(torch, "xpu"):
+    torch.xpi = type("MockXPU", (), {"empty_cache": lambda: None})
 from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
 from peft import PeftModel
 from io import BytesIO
