@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import torch
 if not hasattr(torch, "xpu"):
-    torch.xpi = type("MockXPU", (), {"empty_cache": lambda: None})
+    torch.xpu = type("MockXPU", (), {"empty_cache": lambda: None})
 from diffusers import StableDiffusionPipeline, EulerAncestralDiscreteScheduler
 from peft import PeftModel
 from io import BytesIO
@@ -26,9 +26,8 @@ app.add_middleware(
 pipe = None
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-BASE_MODEL = "runway/stable-diffusion-v1-5"
-LORA_WEIGHTS_PATH_BLIP = "./lora_weights/lora_weights_BLIP"
-LORA_WEIGHTS_PATH_FLORENCE2 = "./lora_weights/lora_weights_FLORENCE2"
+BASE_MODEL = "runwayml/stable-diffusion-v1-5"
+LORA_WEIGHTS_PATH = "./lora_weights"
 
 class PromptRequest(BaseModel):
     prompt: str
@@ -57,7 +56,7 @@ async def load_model():
 
     if os.path.exists(LORA_WEIGHTS_PATH):
         print(f"Loading LoRA from: {LORA_WEIGHTS_PATH}")
-        pipe.unet = PeftModel.from_pretrained(pipe.unet, LORA_WEIGHTS_PATH)
+        pipe.load_lora_weights(LORA_WEIGHTS_PATH)
     else:
         print(f"WARNING: LoRa weights not plugged in")
         print("Using base model only")
@@ -94,7 +93,7 @@ async def generate_image(request: PromptRequest):
             request.seed = torch.randint(0, 2**32, (1,)).item()
             generator = torch.Generator(device=DEVICE).manual_seed(request.seed)
         
-        with torch.autocaset(DEVICE):
+        with torch.autocast(DEVICE):
             result = pipe(
                 prompt = request.prompt,
                 negative_prompt = "blurry, low quality, distorted, ugly, bad anatomy, watermark",
