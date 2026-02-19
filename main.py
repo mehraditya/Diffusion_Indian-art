@@ -27,7 +27,8 @@ pipe = None
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 BASE_MODEL = "runway/stable-diffusion-v1-5"
-LORA_WEIGHTS_PATH = "./lora_weights"
+LORA_WEIGHTS_PATH_BLIP = "./lora_weights/lora_weights_BLIP"
+LORA_WEIGHTS_PATH_FLORENCE2 = "./lora_weights/lora_weights_FLORENCE2"
 
 class PromptRequest(BaseModel):
     prompt: str
